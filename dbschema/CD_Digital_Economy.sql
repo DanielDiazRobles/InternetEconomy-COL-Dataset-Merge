@@ -219,11 +219,6 @@ CREATE TABLE "directorio_clean_raw" (
   "clean_id" int
 );
 
-CREATE TABLE "merge_dataset" (
-  "id" int,
-  "columns" varchar
-);
-
 CREATE TABLE "merge_relations" (
   "merge_id" int PRIMARY KEY,
   "dataprovider_id" int,
