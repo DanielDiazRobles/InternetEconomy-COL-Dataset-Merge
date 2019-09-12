@@ -165,7 +165,8 @@ CREATE TABLE "dataprovider_clean" (
   "relevant_keywords" varchar,
   "subdomain" varchar,
   "domain" varchar,
-  "dns_ns_domain" varchar
+  "dns_ns_domain" varchar,
+  "main_hostname" varchar
 );
 
 CREATE TABLE "dataprovider_clean_raw" (
@@ -225,12 +226,6 @@ CREATE TABLE "merge_dataset" (
 
 CREATE TABLE "merge_relations" (
   "merge_id" int PRIMARY KEY,
-  "dataprovider_id" int PRIMARY KEY,
-  "directorio_id" int PRIMARY KEY
+  "dataprovider_id" int,
+  "directorio_id" int
 );
-
-ALTER TABLE "merge_relations" ADD FOREIGN KEY ("merge_id") REFERENCES "merge_dataset" ("id");
-
-ALTER TABLE "merge_relations" ADD FOREIGN KEY ("dataprovider_id") REFERENCES "dataprovider_clean" ("id");
-
-ALTER TABLE "merge_relations" ADD FOREIGN KEY ("directorio_id") REFERENCES "directorio_clean" ("id");

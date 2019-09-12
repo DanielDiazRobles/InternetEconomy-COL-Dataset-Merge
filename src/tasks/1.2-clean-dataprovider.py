@@ -1,19 +1,31 @@
 import pandas as pd
 import numpy as np
 import os
-#import psycopg2
+import psycopg2
+import logging
 from difflib import SequenceMatcher
+import psycopg2
+import sys
+import configparser
+import time
+
+config = configparser.ConfigParser()
+config.read("config.ini")
+
+logfilename = 'logs/clean_dataprovider_' + time.strftime("%Y%m%d%I%M%S") + '.log'
+open(logfilename, 'a').close()
+logging.basicConfig(    format='%(levelname)s - %(message)s',
+                        filename=logfilename ,
+                        datefmt='%m/%d/%Y %I:%M:%S %p',
+                        level=logging.INFO
+                        )
 
 #Abriendo el archivo
-os.getcwd()
-os.chdir("../..")
-os.chdir("data/dataprovider")
-path = os.path.abspath('dataprovider.csv')
+path = os.path.abspath('data/dataprovider/dataprovider.csv')
 df_csv = pd.read_csv(path)
-
+df_csv = df_csv.sample(n=10000, random_state=1)
 
 #ELIMINANDO COLUMNAS NO UTILIZABLES
-#ELIMINANDO COLUMNAS 2 - 3 min
 del df_csv['Zip code quality']
 del df_csv['Phone number certainty']
 del df_csv['Contactable']
@@ -127,70 +139,85 @@ del df_csv['Video']
 del df_csv['Parking']
 del df_csv['Placeholder']
 
-print("Lista de Columnas en el nuevo dataframe");
-print(list(df_csv))
+logging.info("Lista de Columnas despues da eliminar columnas no utilizadas")
+logging.info(list(df_csv))
 
-print("Conteo de Columnas en el nuevo dataframe");
-print(df_csv.count())
+logging.info("Conteo de Columnas despues da eliminar columnas no utilizadas")
+logging.info(df_csv.count())
 
 #LISTANDO HOSTS REPETIDOS
 duplicateRowsDF = df_csv[df_csv.duplicated(['Hostname'])]
-print("Conteo de Columnas con hostname repetidos");
-print("");
-print(duplicateRowsDF.count())
+logging.info("")
+logging.info("Conteo de Columnas con hostname repetidos")
+logging.info(duplicateRowsDF.count())
+logging.info("")
 
 
 #LISTANDO CORREOS REPETIDOS
 duplicateRowsEmail = df_csv[df_csv.duplicated(['Email address'])]
-print("Conteo de Columnas con EMAIL repetidos");
-print("");
 duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['Email address'])
 duplicateRowsEmail['Email address'].value_counts()
-print(duplicateRowsEmail['Email address'].value_counts())
+logging.info("")
+logging.info("Conteo de Columnas con EMAIL repetidos")
+logging.info(duplicateRowsEmail['Email address'].value_counts())
+logging.info("")
+
 
 #ELIMINANDO LOS CORREOS MAS REPETIDOS
-# 5 - 8 min
+i = 0
 arrayFindValues = ['info@example.com' , 'mail@correo.com' , 'email@yourbusiness.com' , 'info@demolink.org' , 'mail@example.com' , 'info@yourdomain.com' , 'info@yoursite.com' , 'contact@example.com' , 'info@misitio.com' , 'contact@company.com' , 'email@example.com' , 'info@domain.com' , 'info@company.com' , 'support@rn.org' , 'mail@demolink.org' , 'sales@yourcompany.com' , 'info@site.info' , 'info@yourwebsite.com' , 'email@domain.com' , 'info@corferias.com' , 'info@email.com' , 'contact@yoursite.com' , 'info@your-domain.com' , 'email@ejemplo.com' , 'info@felin , x.com.co' , 'support@example.com' , 'contact@email.com', 'mail@mail.com', 'mail@ejemplo.com', 'info@gmail.com', 'info@yourcompany.com', 'info@mail.com', 'info@mysite.com', 'info@sitename.com', 'marketing@example.com', 'support@company.com', 'info@website.com', 'wordpress@example.com', 'su@email.com', 'ejemplo@correo.com', 'your@email.com', 'nombre@correo.com', 'su-email@ejemplo.com', 'someone@example.com', 'example@email.com', 'youremail@yourdomain.com', 'correo@dominio.com', 'info@tudominio.com', 'ejemplo@ejemplo.com', 'name@example.com', 'ejemplo@gmail.com', 'example@example.com']
-
 for index, row in df_csv.iterrows():
     if row['Email address'] in arrayFindValues:
         df_csv.at[index, 'Email address'] = np.nan
+        i = i + 1
+print(str(i) + " Correos corregidos")
+logging.info(str(i) + " Correos corregidos")
 
-print("NUEVA LISTA DE CORREOS REPETIDOS");
-print("");
+#LISTA DE CORREOS DESPUES DE ELIMINAR LOS MÀS REPETIDOS
 duplicateRowsEmail = df_csv[df_csv.duplicated(['Email address'])]
 duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['Email address'])
 duplicateRowsEmail['Email address'].value_counts()
-print(duplicateRowsEmail['Email address'].value_counts())
+logging.info("")
+logging.info("Nueva lista de correos màs repetidos")
+logging.info(duplicateRowsEmail['Email address'].value_counts())
+logging.info("")
 
 
-#LISTANDO CORREOS SECUNDARIOS REPETIDOS
+#DATAFRAME DESPUES DE ELIMINAR CORREOS REPETIDOS EN EMAIL
 duplicateRowsEmail = df_csv[df_csv.duplicated(['Secondary email addresses'])]
-print("Conteo de Columnas con EMAIL repetidos");
-print("");
 duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['Secondary email addresses'])
 duplicateRowsEmail['Secondary email addresses'].value_counts()
-print(duplicateRowsEmail['Secondary email addresses'].value_counts())
+logging.info("")
+logging.info("Nueva lista de correos màs repetidos del field SECONDARY EMAIL")
+logging.info(duplicateRowsEmail['Secondary email addresses'].value_counts())
+logging.info("")
 
 
-#ELIMINANDO LOS CORREOS MAS REPETIDOS
+#ELIMINANDO LOS CORREOS MAS REPETIDOS SECONDARY EMAIL
+i = 0
 arrayFindValues = ['info@example.com' , 'mail@correo.com' , 'email@yourbusiness.com' , 'info@demolink.org' , 'mail@example.com' , 'info@yourdomain.com' , 'info@yoursite.com' , 'contact@example.com' , 'info@misitio.com' , 'contact@company.com' , 'email@example.com' , 'info@domain.com' , 'info@company.com' , 'support@rn.org' , 'mail@demolink.org' , 'sales@yourcompany.com' , 'info@site.info' , 'info@yourwebsite.com' , 'email@domain.com' , 'info@corferias.com' , 'info@email.com' , 'contact@yoursite.com' , 'info@your-domain.com' , 'email@ejemplo.com' , 'info@felin , x.com.co' , 'support@example.com' , 'contact@email.com', 'mail@mail.com', 'mail@ejemplo.com', 'info@gmail.com', 'info@yourcompany.com', 'info@mail.com', 'info@mysite.com', 'info@sitename.com', 'marketing@example.com', 'support@company.com', 'info@website.com', 'wordpress@example.com', 'su@email.com', 'ejemplo@correo.com', 'your@email.com', 'nombre@correo.com', 'su-email@ejemplo.com', 'someone@example.com', 'example@email.com', 'youremail@yourdomain.com', 'correo@dominio.com', 'info@tudominio.com', 'ejemplo@ejemplo.com', 'name@example.com', 'ejemplo@gmail.com', 'example@example.com']
-
 for index, row in df_csv.iterrows():
     if row['Secondary email addresses'] in arrayFindValues:
         df_csv.at[index, 'Secondary email addresses'] = np.nan
+        i = i + 1
+print(str(i) + " Correos corregidos")
+logging.info(str(i) + " Correos corregidos")
 
-print("NUEVA LISTA DE CORREOS REPETIDOS");
-print("");
+
+#DATAFRAME DESPUES DE ELIMINAR CORREOS REPETIDOS EN SECONDARY EMAIL
 duplicateRowsEmail = df_csv[df_csv.duplicated(['Secondary email addresses'])]
 duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['Secondary email addresses'])
 duplicateRowsEmail['Secondary email addresses'].value_counts()
-print(duplicateRowsEmail['Secondary email addresses'].value_counts())
+logging.info("")
+logging.info("Nueva lista de correos màs repetidos del field SECONDARY EMAIL")
+logging.info(duplicateRowsEmail['Secondary email addresses'].value_counts())
+logging.info("")
 
 
 #CREANDO COLUMNA DE URL LIMPIA
 df_csv['Web Page'] = df_csv['Hostname']
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('www.','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.com','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.co','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.gov','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.edu','')
@@ -200,18 +227,30 @@ df_csv['Hostname'] = df_csv['Hostname'].str.replace('.io','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.ve','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.us','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.es','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.me','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.in','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.cl','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.pe','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.mx','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.we','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.uk','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.eu','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.xyz','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.ong','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.direct','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.book','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.info','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.site','')
+df_csv['Hostname'] = df_csv['Hostname'].str.replace('.blog','')
 
 
 i = 0
 arrayHosts = []
-
 for index, row in df_csv.iterrows():
-    arrayHosts.append(row['Hostname'])
+    x = row['Hostname'].split(".")
 
 
 # LIMPIANDO Y AGRUPANDO CAMPOS POR HOSTNAME
-#1000 registros cada 2.5 min
-#40000 en una hora
 i = 0
 json_relation = []
 for index, row in df_csv.iterrows():
@@ -224,8 +263,7 @@ for index, row in df_csv.iterrows():
     count = df_csv_filtered['Hostname'].count()
     if(count > 1):
         for index2, row2 in df_csv_filtered.iterrows():
-            ratio = SequenceMatcher(None, row['Hostname'], row2['Hostname']).ratio()
-            if ratio > 0.85 and  ratio < 1:
+            if row['Hostname'] == row2['Hostname'] and index != index2:
                 relation = {
                     "indexClean" : index,
                     "indexRaw" : index2,
@@ -234,32 +272,47 @@ for index, row in df_csv.iterrows():
                 }
                 df_csv = df_csv.drop(index2)
                 json_relation.append(relation)
-                print(relation)
-    print(str(i) + " Registros cotejados")
-    i = i + 1
-
+                logging.info(relation)
+                #print(str(i) + " Registros cotejados")
 df_csv['Hostname'] = df_csv['Web Page']
 
+cleanFilePath = 'data/dataprovider/dataprovider_limpio.csv'
+if os.path.exists(cleanFilePath):
+    os.remove(cleanFilePath)
+df_csv.to_csv(r'data/dataprovider/dataprovider_limpio.csv')
 
-#GUARDANDO INFORMACION EN BD TABLA CLEAN
-connection = psycopg2.connect("dbname='cd_digital_economy' user='postgres' host='localhost' password='postgres'")
+#CREANDO LA CADENA DE CONNECTION
+connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
 cursor = connection.cursor()
+
+#Limpiando la tabla dataprovider_clean
+postgres_delete_query = """ DELETE FROM dataprovider_clean"""
+cursor.execute(postgres_delete_query)
+connection.commit()
+
+#GUARDANDO INFORMACION EN BD TABLA dataprovider_clean
+
 postgres_insert_query = """ INSERT INTO dataprovider_clean (id,hostname, continent, country, region, zip_code, city, address, addresses, company_name ,company_type, company_quality, legal_entity, business_registry_number, iban_number, bic_number, tax_number, phone_number, secondary_phone_numbers, email_address, secondary_email_addresses, keywords, relevant_keywords, subdomain, domain, dns_ns_domain) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
-
+i = 0
 for index, row in df_csv.iterrows():
     record_to_insert = (index, row['Hostname'], row['Continent'], row['Country'], row['Region'], row['Zip code'], row['City'], row['Address'], row['Addresses'], row['Company name'], row['Company type'], row['Company quality'], row['Legal entity'], row['Business Registry number'], row['IBAN number'], row['BIC number'], row['Tax number'], row['Phone number'], row['Secondary phone numbers'], row['Email address'], row['Secondary email addresses'], row['Keywords'], row['Relevant keywords'], row['Subdomain'], row['Domain'], row['DNS NS domain'])
-
-    print(str(index) + " Registor s guardados en dataprovider_clean")
     cursor.execute(postgres_insert_query, record_to_insert)
     connection.commit()
     count = cursor.rowcount
+    i = i + 1
+print(str(i) + " Registros guardados en dataprovider_clean")
 
 
-
-#GUARDANDO INFORMACION EN BD TABLA ROMPIMIENTO
-connection = psycopg2.connect("dbname='cd_digital_economy' user='postgres' host='localhost' password='postgres'")
+#CREANDO LA CADENA DE CONNECTION
+connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
 cursor = connection.cursor()
+
+#Limpiando la tabla dataprovider_clean_raw
+postgres_delete_query = """ DELETE FROM dataprovider_clean_raw"""
+cursor.execute(postgres_delete_query)
+connection.commit()
+
 postgres_insert_query = """ INSERT INTO dataprovider_clean_raw (raw_id,clean_id) VALUES (%s,%s)"""
 
 i = 0
@@ -269,4 +322,4 @@ for item in json_relation:
     connection.commit()
     count = cursor.rowcount
     i = i + 1
-    print(str(i) + " Registor s guardados en dataprovider_clean")
+print(str(i) + " Registros guardados en dataprovider_clean_raw")

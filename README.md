@@ -42,12 +42,29 @@ Para hacer merge de ambos dataset se ejecutan las siguientes tareas:
 
  El algoritmo esta desarrollado en Python - anaconda3-2019.07
  
- Las librerias a instalar se encuentran en el archivo requirements.txt para instalarlas ejecutar el siguiente comando.
+ Para instalar las librerias restantes ejecutar los siguiente(s) comandos
 
 ```shell 
-pip install -r requirements.txt
+pip install psycopg2-binary
 ```
 
+## Ejecución del proyecto
+
+### Creaciòn Base de Datos
+
+Usar el script provisto en la carpeta dbschema y crear la base de datos en Postgres, actualizar las credenciales de la base de datos en el archivo config.ini
+
+### Ejecución Scripts
+
+En estos momentos no hay script que ejecute todas las tareas por lo que se debe ejecutar las tareas de manera secuencial por medio de los siguientes comandos
+
+```shell 
+python3 src/tasks/1.1-save-raw-dataprovider.py
+python3 src/tasks/1.2-clean-dataprovider.py
+python3 src/tasks/2.1-save-raw-directorio.py
+python3 src/tasks/2.2-clean-directorio.py
+python3 src/tasks/3-merge_data.py
+```
 
 
 
