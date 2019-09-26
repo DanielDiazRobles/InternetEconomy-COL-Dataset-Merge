@@ -219,11 +219,6 @@ CREATE TABLE "directorio_clean_raw" (
   "clean_id" int
 );
 
-CREATE TABLE "merge_dataset" (
-  "id" int,
-  "columns" varchar
-);
-
 
 CREATE TABLE "merge_relations" (
   "merge_id" int,
@@ -233,5 +228,6 @@ CREATE TABLE "merge_relations" (
   "web_page_directorio" varchar,
   "value_comparation_dataprovider" varchar,
   "value_comparation_directorio" varchar,
-  "ratio" varchar
+  "ratio" varchar,
+  "item" varchar
 );

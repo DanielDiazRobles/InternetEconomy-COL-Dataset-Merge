@@ -35,6 +35,7 @@ logging.warning(df_dataprovider.count())
 #CREANDO COLUMNA DE URL LIMPIA DE DATAPROVIDER
 df_dataprovider['Web Page'] = df_dataprovider['Hostname']
 df_dataprovider['Hostname'] = df_dataprovider['Hostname'].str.replace('www.','')
+df_dataprovider['Hostname'] = df_dataprovider['Hostname'].str.replace('.com','')
 df_dataprovider['Hostname'] = df_dataprovider['Hostname'].str.replace('.co','')
 df_dataprovider['Hostname'] = df_dataprovider['Hostname'].str.replace('.gov','')
 df_dataprovider['Hostname'] = df_dataprovider['Hostname'].str.replace('.edu','')
@@ -243,11 +244,11 @@ cursor.execute(postgres_delete_query)
 connection.commit()
 
 #GUARDANDO INFORMACION EN BD TABLA CLEAN
-postgres_insert_query = """ INSERT INTO merge_relations (merge_id,dataprovider_id,directorio_id,web_page_dataprovider,web_page_directorio,value_comparation_dataprovider,value_comparation_directorio,ratio) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
+postgres_insert_query = """ INSERT INTO merge_relations (merge_id,dataprovider_id,directorio_id,web_page_dataprovider,web_page_directorio,value_comparation_dataprovider,value_comparation_directorio,ratio,item) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
 
 i = 0
 for item in result:
-    record_to_insert = (i, item['index_dataprovider'], item['index_directorio'], item['web_page_dataprovider'], item['web_page_directorio'], item['value_comparation_dataprovider'], item['value_comparation_directorio'],item['ratio'])
+    record_to_insert = (i, item['index_dataprovider'], item['index_directorio'], item['web_page_dataprovider'], item['web_page_directorio'], item['value_comparation_dataprovider'], item['value_comparation_directorio'],item['ratio'],item['item'])
     cursor.execute(postgres_insert_query, record_to_insert)
     connection.commit()
     count = cursor.rowcount
