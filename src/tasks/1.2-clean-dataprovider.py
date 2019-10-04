@@ -23,7 +23,9 @@ logging.basicConfig(    format='%(levelname)s - %(message)s',
 #Abriendo el archivo
 path = os.path.abspath('data/dataprovider/dataprovider.csv')
 df_csv = pd.read_csv(path)
-df_csv = df_csv.sample(n=10000, random_state=1)
+df_csv = df_csv.sample(n=1000, random_state=1)
+df_csv = df_csv.where((pd.notnull(df_csv)), "")
+
 
 #ELIMINANDO COLUMNAS NO UTILIZABLES
 del df_csv['Zip code quality']
@@ -144,7 +146,6 @@ logging.info(list(df_csv))
 
 logging.info("Conteo de Columnas despues da eliminar columnas no utilizadas")
 logging.info(df_csv.count())
-
 #LISTANDO HOSTS REPETIDOS
 duplicateRowsDF = df_csv[df_csv.duplicated(['Hostname'])]
 logging.info("")
@@ -243,44 +244,10 @@ df_csv['Hostname'] = df_csv['Hostname'].str.replace('.info','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.site','')
 df_csv['Hostname'] = df_csv['Hostname'].str.replace('.blog','')
 
-
-i = 0
-arrayHosts = []
-for index, row in df_csv.iterrows():
-    x = row['Hostname'].split(".")
-
-
-# LIMPIANDO Y AGRUPANDO CAMPOS POR HOSTNAME
-i = 0
-json_relation = []
-for index, row in df_csv.iterrows():
-    hostname = row['Hostname']
-    df_csv_copy =  df_csv
-    df_filter = df_csv_copy['Hostname'].str.match(hostname)
-
-    contains_string =  df_filter == True
-    df_csv_filtered = df_csv_copy[contains_string]
-    count = df_csv_filtered['Hostname'].count()
-    if(count > 1):
-        for index2, row2 in df_csv_filtered.iterrows():
-            if row['Hostname'] == row2['Hostname'] and index != index2:
-                relation = {
-                    "indexClean" : index,
-                    "indexRaw" : index2,
-                    "hostGroup" : row['Hostname'],
-                    "hostnameIndex" : row2['Hostname']
-                }
-                df_csv = df_csv.drop(index2)
-                json_relation.append(relation)
-                logging.info(relation)
-                #print(str(i) + " Registros cotejados")
-df_csv['Hostname'] = df_csv['Web Page']
-
-cleanFilePath = 'data/dataprovider/dataprovider_limpio.csv'
-if os.path.exists(cleanFilePath):
-    os.remove(cleanFilePath)
-df_csv.to_csv(r'data/dataprovider/dataprovider_limpio.csv')
-
+print(df_csv.count())
+#AGRUPANDO por hostname
+group_host = df_csv.groupby('Hostname')
+print(group_host.count())
 #CREANDO LA CADENA DE CONNECTION
 connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
 cursor = connection.cursor()
@@ -289,19 +256,31 @@ cursor = connection.cursor()
 postgres_delete_query = """ DELETE FROM dataprovider_clean"""
 cursor.execute(postgres_delete_query)
 connection.commit()
-
-#GUARDANDO INFORMACION EN BD TABLA dataprovider_clean
-
 postgres_insert_query = """ INSERT INTO dataprovider_clean (id,hostname, continent, country, region, zip_code, city, address, addresses, company_name ,company_type, company_quality, legal_entity, business_registry_number, iban_number, bic_number, tax_number, phone_number, secondary_phone_numbers, email_address, secondary_email_addresses, keywords, relevant_keywords, subdomain, domain, dns_ns_domain) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
-i = 0
-for index, row in df_csv.iterrows():
-    record_to_insert = (index, row['Hostname'], row['Continent'], row['Country'], row['Region'], row['Zip code'], row['City'], row['Address'], row['Addresses'], row['Company name'], row['Company type'], row['Company quality'], row['Legal entity'], row['Business Registry number'], row['IBAN number'], row['BIC number'], row['Tax number'], row['Phone number'], row['Secondary phone numbers'], row['Email address'], row['Secondary email addresses'], row['Keywords'], row['Relevant keywords'], row['Subdomain'], row['Domain'], row['DNS NS domain'])
-    cursor.execute(postgres_insert_query, record_to_insert)
-    connection.commit()
-    count = cursor.rowcount
-    i = i + 1
-print(str(i) + " Registros guardados en dataprovider_clean")
+
+#GUARDANDO EN LA TABLA LIMPIA Y GENERANDO LOS REGISTROS DE RELACIÓN
+json_relation = []
+new_index = 0;
+for name_of_the_group, group in group_host:
+    count = 0;
+    for index, row in group.iterrows():
+        if count == 0:
+            record_to_insert = (index.item(), row['Hostname'], row['Continent'], row['Country'], row['Region'], row['Zip code'], row['City'], row['Address'], row['Addresses'], row['Company name'], row['Company type'], row['Company quality'], row['Legal entity'], row['Business Registry number'], row['IBAN number'], row['BIC number'], row['Tax number'], row['Phone number'], row['Secondary phone numbers'], row['Email address'], row['Secondary email addresses'], row['Keywords'], row['Relevant keywords'], row['Subdomain'], row['Domain'], row['DNS NS domain'])
+            cursor.execute(postgres_insert_query, record_to_insert)
+            connection.commit()
+            count = cursor.rowcount
+            count = 1
+        else:
+            relation = {
+                "indexClean" : new_index,
+                "indexRaw" : index.item(),
+            }
+            json_relation.append(relation)
+    new_index = new_index + 1
+print(str(new_index) + " Registros guardados en dataprovider_clean")
+
+
 
 
 #CREANDO LA CADENA DE CONNECTION
@@ -323,3 +302,12 @@ for item in json_relation:
     count = cursor.rowcount
     i = i + 1
 print(str(i) + " Registros guardados en dataprovider_clean_raw")
+
+
+
+'''
+cleanFilePath = 'data/dataprovider/dataprovider_limpio.csv'
+if os.path.exists(cleanFilePath):
+    os.remove(cleanFilePath)
+df_csv.to_csv(r'data/dataprovider/dataprovider_limpio.csv')
+'''

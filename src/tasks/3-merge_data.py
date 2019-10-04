@@ -6,8 +6,10 @@ import psycopg2
 import logging
 import Levenshtein as lev
 from difflib import SequenceMatcher
-from conf_env import environment
-from difflib import SequenceMatcher
+import configparser
+
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
@@ -15,7 +17,7 @@ def similar(a, b):
 logging.basicConfig(filename='logs/merge_data.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 #Consulta  a la BD tabla directorio_clean
-connection = psycopg2.connect("dbname='cd_digital_economy' user='" + environment.user_psql + "' host='localhost' password='" + environment.pass_psql +"'")
+connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
 postgreSQL_select_Query = "SELECT * FROM directorio_clean"
 cursor = connection.cursor()
 cursor.execute(postgreSQL_select_Query)
@@ -24,7 +26,7 @@ df_directorio = pd.DataFrame(directorio, columns=['id','TIPO_DOCUMENTO','NIT','D
 logging.warning(df_directorio.count())
 
 #Consulta  a la BD tabla dataprovider_clean
-connection = psycopg2.connect("dbname='cd_digital_economy' user='" + environment.user_psql + "' host='localhost' password='" + environment.pass_psql +"'")
+connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
 postgreSQL_select_Query = "SELECT * FROM dataprovider_clean"
 cursor = connection.cursor()
 cursor.execute(postgreSQL_select_Query)
@@ -90,9 +92,10 @@ df_directorio['WEB'] = df_directorio['WEB'].str.replace('.info','')
 df_directorio['WEB'] = df_directorio['WEB'].str.replace('.site','')
 df_directorio['WEB'] = df_directorio['WEB'].str.replace('.blog','')
 
+print(df_directorio.count())
+
 
 result = []
-
 for index, row in df_dataprovider.iterrows():
     host_dataprovider =  row['Hostname']
     #Copia de dataframe del directorio
@@ -235,7 +238,7 @@ print(len(result_mail))
 
 
 #CREANDO LA CADENA DE CONNECTION
-connection = psycopg2.connect("dbname='cd_digital_economy' user='" + environment.user_psql + "' host='localhost' password='" + environment.pass_psql +"'")
+connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
 cursor = connection.cursor()
 
 #Limpiando la tabla directorio_clean

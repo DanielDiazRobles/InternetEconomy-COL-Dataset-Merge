@@ -70,26 +70,7 @@ for index, row in df_csv.iterrows():
     if row['WEB'] in arrayFindValues:
         df_csv.at[index, 'WEB'] = np.nan
 
-#LISTANDO NOMBRE_COMERCIAL REPETIDOS
-duplicateRowsEmail = df_csv[df_csv.duplicated(['NOMBRE_COMERCIAL'])]
-duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['NOMBRE_COMERCIAL'])
-duplicateRowsEmail['NOMBRE_COMERCIAL'].value_counts()
-logging.info("")
-logging.info("Conteo de Columnas con NOMBRE_COMERCIAL repetidos")
-logging.info(duplicateRowsDF.count())
-logging.info("")
-
-
-#LISTANDO EMAIL REPETIDOS
-duplicateRowsEmail = df_csv[df_csv.duplicated(['EMAIL'])]
-duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['EMAIL'])
-duplicateRowsEmail['EMAIL'].value_counts()
-logging.info("")
-logging.info("Conteo de Columnas con EMAIL repetidos")
-logging.info(duplicateRowsDF.count())
-logging.info("")
-
-#AGRUPANDO POR
+#AGRUPANDO POR NITT
 group_nit = df_csv.groupby('NIT')
 
 
