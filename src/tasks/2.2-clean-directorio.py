@@ -22,16 +22,28 @@ logging.basicConfig(    format='%(levelname)s - %(message)s',
 #Abriendo el archivo
 path = os.path.abspath('data/directorio/directorio.csv')
 df_csv = pd.read_csv(path)
-df_csv = df_csv.sample(n=10000, random_state=1)
-
-#ELIMINANDO LSO REGISTROS SIN PAGINA WEB
-df_csv = df_csv.dropna(subset=['WEB'])
-
+#df_csv = df_csv.sample(n=2000, random_state=1)
 
 #ELIMINANDO COLUMNAS NO UTILIZABLES
 del df_csv['Unnamed: 16']
 del df_csv['CIIU_ID_CIIU_4']
 del df_csv['CIIU_ID_CIIU']
+del df_csv['TIPO_DOCUMENTO']
+del df_csv['DIGITO_VERIFICACION']
+del df_csv['DIRECCION']
+del df_csv['MUNI_ID_DPTO']
+del df_csv['NOMBRE_DPTO']
+del df_csv['MUNI_ID_MPIO']
+del df_csv['NOMBRE_MPIO']
+del df_csv['TELEFONO1']
+del df_csv['TELEFONO2']
+
+df_csv['NIT'] = df_csv['NIT'].astype(str)
+df_csv = df_csv.where((pd.notnull(df_csv)), "")
+
+
+#ELIMINANDO LSO REGISTROS SIN PAGINA WEB
+df_csv = df_csv.dropna(how='all')
 
 #CONVIRTIENDO EN MINUSCULAS
 df_csv = df_csv.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
@@ -48,9 +60,8 @@ duplicateRowsDF = duplicateRowsDF.dropna(subset=['WEB'])
 duplicateRowsDF['WEB'].value_counts()
 logging.info("")
 logging.info("Conteo de Columnas con hostname repetidos")
-logging.info(duplicateRowsDF.count())
+logging.info(duplicateRowsDF['WEB'].value_counts())
 logging.info("")
-
 
 #ELIMINANDO LOS HOSTS MAS REPETIDOS
 arrayFindValues = ['0']
@@ -58,17 +69,6 @@ arrayFindValues = ['0']
 for index, row in df_csv.iterrows():
     if row['WEB'] in arrayFindValues:
         df_csv.at[index, 'WEB'] = np.nan
-
-
-#LISTANDO NIT REPETIDOS
-duplicateRowsEmail = df_csv[df_csv.duplicated(['NIT'])]
-duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['NIT'])
-duplicateRowsEmail['NIT'].value_counts()
-logging.info("")
-logging.info("Conteo de Columnas con NIT repetidos")
-logging.info(duplicateRowsDF.count())
-logging.info("")
-
 
 #LISTANDO NOMBRE_COMERCIAL REPETIDOS
 duplicateRowsEmail = df_csv[df_csv.duplicated(['NOMBRE_COMERCIAL'])]
@@ -89,96 +89,11 @@ logging.info("Conteo de Columnas con EMAIL repetidos")
 logging.info(duplicateRowsDF.count())
 logging.info("")
 
-
-#LISTANDO TELEFONO1 REPETIDOS
-duplicateRowsEmail = df_csv[df_csv.duplicated(['TELEFONO1'])]
-duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['TELEFONO1'])
-duplicateRowsEmail['TELEFONO1'].value_counts()
-logging.info("")
-logging.info("Conteo de Columnas con TELEFONO1 repetidos")
-logging.info(duplicateRowsDF.count())
-logging.info("")
+#AGRUPANDO POR
+group_nit = df_csv.groupby('NIT')
 
 
-#LISTANDO RAZON_SOCIAL REPETIDOS
-duplicateRowsEmail = df_csv[df_csv.duplicated(['RAZON_SOCIAL'])]
-duplicateRowsEmail = duplicateRowsEmail.dropna(subset=['RAZON_SOCIAL'])
-duplicateRowsEmail['RAZON_SOCIAL'].value_counts()
-logging.info("")
-logging.info("Conteo de Columnas con RAZON_SOCIAL repetidos")
-logging.info(duplicateRowsDF.count())
-logging.info("")
-
-
-#CREANDO COLUMNA DE URL LIMPIA
-df_csv['Web Page Main'] = df_csv['WEB']
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('www.','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('com.','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.co','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.gov','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.edu','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.org','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.net','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.io','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.ve','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.us','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.es','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.me','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.in','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.cl','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.pe','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.mx','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.we','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.uk','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.eu','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.xyz','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.ong','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.direct','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.book','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.info','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.site','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.blog','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.tv','')
-df_csv['Web Page Main'] = df_csv['Web Page Main'].str.replace('.eu','')
-
-
-i = 0
-arrayHosts = []
-for index, row in df_csv.iterrows():
-    x = str(row['Web Page Main']).split(".")
-
-
-# LIMPIANDO Y AGRUPANDO CAMPOS POR HOSTNAME
-i = 0
-json_relation = []
-for index, row in df_csv.iterrows():
-    hostname = row['Web Page Main']
-    df_csv_copy =  df_csv
-    df_filter = df_csv_copy['Web Page Main'].str.match(str(hostname))
-
-    contains_string =  df_filter == True
-    df_csv_filtered = df_csv_copy[contains_string]
-    count = df_csv_filtered['Web Page Main'].count()
-    if(count > 1):
-        for index2, row2 in df_csv_filtered.iterrows():
-            if row['Web Page Main'] == row2['Web Page Main'] and index != index2:
-                relation = {
-                    "indexClean" : index,
-                    "indexRaw" : index2,
-                    "hostGroup" : row['Web Page Main'],
-                    "hostnameIndex" : row2['Web Page Main']
-                }
-                df_csv = df_csv.drop(index2)
-                json_relation.append(relation)
-                logging.info(relation)
-
-cleanFilePath = 'data/directorio/directorio_limpio.csv'
-if os.path.exists(cleanFilePath):
-    os.remove(cleanFilePath)
-df_csv.to_csv(r'data/directorio/directorio_limpio.csv')
-
-
-#CREANDO LA CADENA DE CONNECTION
+#CREANDO LA CADENA DE CONNECTION DE DIRECTORIO LIMPIO
 connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
 cursor = connection.cursor()
 
@@ -186,18 +101,29 @@ cursor = connection.cursor()
 postgres_delete_query = """ DELETE FROM directorio_clean"""
 cursor.execute(postgres_delete_query)
 connection.commit()
+postgres_insert_query = """ INSERT INTO directorio_clean (id, nit, razon_social, nombre_comercial, web, email) VALUES (%s,%s,%s,%s,%s,%s)"""
 
-#GUARDANDO INFORMACION EN BD TABLA CLEAN
-postgres_insert_query = """ INSERT INTO directorio_clean (id,tipo_documento, nit, digito_verificacion, razon_social, nombre_comercial, direccion, muni_id_dpto, nombre_dpto, muni_id_mpio ,nombre_mpio, telefono1, telefono2, web, email) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-
-i = 0
-for index, row in df_csv.iterrows():
-    record_to_insert = (i,row['TIPO_DOCUMENTO'],row['NIT'],row['DIGITO_VERIFICACION'],row['RAZON_SOCIAL'],row['NOMBRE_COMERCIAL'],row['DIRECCION'],row['MUNI_ID_DPTO'],row['NOMBRE_DPTO'],row['MUNI_ID_MPIO'],row['NOMBRE_MPIO'],row['TELEFONO1'],row['TELEFONO2'],row['WEB'],row['EMAIL'])
-    cursor.execute(postgres_insert_query, record_to_insert)
-    connection.commit()
-    count = cursor.rowcount
-    i = i + 1
-print(str(i) + "Registros guardados en directorio_clean")
+#1000 en 20 seg
+#GUARDANDO EN LA TABLA LIMPIA Y GENERANDO LOS REGISTROS DE RELACIÓN
+json_relation = []
+new_index = 0;
+for name_of_the_group, group in group_nit:
+    count = 0;
+    for index, row in group.iterrows():
+        if count == 0:
+            record_to_insert = (new_index, row['NIT'],row['RAZON_SOCIAL'],row['NOMBRE_COMERCIAL'],row['WEB'],row['EMAIL'])
+            cursor.execute(postgres_insert_query, record_to_insert)
+            connection.commit()
+            count = cursor.rowcount
+            count = 1
+        else:
+            relation = {
+                "indexClean" : new_index,
+                "indexRaw" : index,
+            }
+            json_relation.append(relation)
+    new_index = new_index + 1
+print(str(new_index) + "Registros guardados en directorio_clean")
 
 
 #CREANDO LA CADENA DE CONNECTION
@@ -214,9 +140,17 @@ postgres_insert_query = """ INSERT INTO directorio_clean_raw (raw_id,clean_id) V
 
 i = 0
 for item in json_relation:
-    record_to_insert = (item['indexRaw'], item['indexClean'])
+    record_to_insert = (item['indexRaw'].item(), item['indexClean'])
     cursor.execute(postgres_insert_query, record_to_insert)
     connection.commit()
     count = cursor.rowcount
     i = i + 1
 print(str(i) + " Registros guardados en directorio_clean_raw")
+
+
+'''
+cleanFilePath = 'data/directorio/directorio_limpio.csv'
+if os.path.exists(cleanFilePath):
+    os.remove(cleanFilePath)
+df_csv.to_csv(r'data/directorio/directorio_limpio.csv')
+'''
