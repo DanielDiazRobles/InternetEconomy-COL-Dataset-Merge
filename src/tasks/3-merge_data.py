@@ -122,10 +122,14 @@ for index, row in df_dataprovider.iterrows():
                 }
                 logging.warning(merge)
                 result.append(merge)
-
-
 result_name = []
 df_directorio_lower = df_directorio.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
+
+
+
+
+
+
 
 for index, row in df_dataprovider.iterrows():
     name =  row['Company name'].lower()
