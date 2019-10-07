@@ -241,7 +241,7 @@ for index, row in df_dataprovider.iterrows():
                     logging.warning(merge)
                     result_mail.append(merge)
 print(len(result_mail))
-'''
+
 
 #CREANDO LA CADENA DE CONNECTION
 connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
