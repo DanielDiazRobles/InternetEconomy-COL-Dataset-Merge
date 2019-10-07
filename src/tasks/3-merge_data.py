@@ -34,6 +34,7 @@ dataprovider = cursor.fetchall()
 df_dataprovider = pd.DataFrame(dataprovider, columns=['id', 'Hostname', 'Continent', 'Country', 'Region', 'Zip code', 'City', 'Address', 'Addresses', 'Company name', 'Company type', 'Company quality', 'Legal entity', 'Business Registry number', 'IBAN number', 'BIC number', 'Tax number', 'Phone number', 'Secondary phone numbers', 'Email address', 'Secondary email addresses', 'Keywords', 'Relevant keywords', 'Subdomain', 'Domain', 'DNS NS domain', 'main_web'])
 logging.warning(df_dataprovider.count())
 
+
 #CREANDO COLUMNA DE URL LIMPIA DE DATAPROVIDER
 df_dataprovider['Web Page'] = df_dataprovider['Hostname']
 df_dataprovider['Hostname'] = df_dataprovider['Hostname'].str.replace('www.','')
@@ -92,99 +93,100 @@ df_directorio['WEB'] = df_directorio['WEB'].str.replace('.info','')
 df_directorio['WEB'] = df_directorio['WEB'].str.replace('.site','')
 df_directorio['WEB'] = df_directorio['WEB'].str.replace('.blog','')
 
-print(df_directorio.count())
+
+#FILTRANDO POR SITIOS UNICAMENTE CON WEB
+for i in df_directorio.index:
+    host_direcotrio = df_directorio.get_value(i,'WEB')
+    if host_direcotrio == "":
+        df_directorio.set_value(i,'WEB',np.nan)
+
+df_directorio_no_na_web = df_directorio.dropna(subset=['WEB'])
+print(df_directorio_no_na_web.count())
 
 
 result = []
-for index, row in df_dataprovider.iterrows():
-    host_dataprovider =  row['Hostname']
-    #Copia de dataframe del directorio
-    df_csv_direcotrio_copy = df_directorio
-    #Filtrado por match
-    df_filter = df_csv_direcotrio_copy['WEB'].str.match(host_dataprovider)
-    contains_string =  df_filter == True
-    #Generando dataframe filtrado
-    df_csv__filtered = df_csv_direcotrio_copy[contains_string]
-    count = df_csv__filtered['WEB'].count()
+for i in df_dataprovider.index:
+    host_dataprovider = df_dataprovider.get_value(i,'Hostname')
+    id_dataprovider = df_dataprovider.get_value(i,'id')
+    web_page_dataprovider = df_dataprovider.get_value(i,'Web Page')
+    df_csv_filtered = df_directorio_no_na_web[df_directorio_no_na_web['WEB'].str.contains(host_dataprovider)]
+    count = df_csv_filtered['WEB'].count()
     if(count > 0):
-        for index2, row2 in df_csv__filtered.iterrows():
-            Ratio = lev.ratio(row['Hostname'].lower(),row2['WEB'].lower())
+        for j in df_csv_filtered.index:
+            host_directorio = df_csv_filtered.get_value(j,'WEB')
+            id_directorio = df_csv_filtered.get_value(j,'id')
+            web_page_directorio = df_csv_filtered.get_value(j,'Web Page')
+
+            Ratio = lev.ratio(host_dataprovider.lower(),host_directorio.lower())
             if Ratio > 0.80:
                 merge = {
-                    "web_page_dataprovider" : row['Web Page'],
-                    "web_page_directorio" : row2['Web Page'],
-                    "index_dataprovider" : row['id'],
-                    "index_directorio" : row2['id'],
+                    "web_page_dataprovider" : host_dataprovider,
+                    "web_page_directorio" : host_directorio,
+                    "index_dataprovider" : id_dataprovider,
+                    "index_directorio" : id_directorio,
                     "ratio" : Ratio,
                     "item" : "hostname",
-                    "value_comparation_dataprovider" : row['Web Page'],
-                    "value_comparation_directorio" : row2['Web Page']
+                    "value_comparation_dataprovider" : web_page_dataprovider,
+                    "value_comparation_directorio" : web_page_directorio
                 }
                 logging.warning(merge)
                 result.append(merge)
-result_name = []
-df_directorio_lower = df_directorio.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
+                df_directorio.drop([j])
+    df_dataprovider.drop([i])
 
 
+df_directorio = df_directorio.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
 
 
+#FILTRANDO POR REGISTROS CON NOMBRE DE COMPAÑIA
+for i in df_directorio.index:
+    host_direcotrio = df_directorio.get_value(i,'RAZON_SOCIAL')
+    if host_direcotrio == "":
+        df_directorio.set_value(i,'RAZON_SOCIAL',np.nan)
+
+df_directorio_no_na_razon = df_directorio.dropna(subset=['RAZON_SOCIAL'])
+print(df_directorio_no_na_web.count())
 
 
+for i in df_dataprovider.index:
+    host_direcotrio = df_dataprovider.get_value(i,'Company name')
+    if host_direcotrio == "":
+        df_dataprovider.set_value(i,'Company name',np.nan)
 
-for index, row in df_dataprovider.iterrows():
-    name =  row['Company name'].lower()
-    if name != "nan":
-        df_csv_direcotrio_copy = df_directorio_lower
-        try:
-            df_filter = df_csv_direcotrio_copy['RAZON_SOCIAL'].str.match(name)
-            contains_string =  df_filter == True
-            df_csv__filtered = df_csv_direcotrio_copy[contains_string]
-            count = df_csv__filtered['RAZON_SOCIAL'].count()
-            if(count > 0):
-                for index2, row2 in df_csv__filtered.iterrows():
-                    Ratio = lev.ratio(row['Company name'].lower(),row2['RAZON_SOCIAL'].lower())
-                if Ratio > 0.70:
-                    merge = {
-                        "web_page_dataprovider" : row['Web Page'],
-                        "web_page_directorio" : row2['Web Page'],
-                        "value_comparation_dataprovider" : row['Company name'],
-                        "value_comparation_directorio" : row2['RAZON_SOCIAL'],
-                        "index_dataprovider" : row['id'],
-                        "index_directorio" : row2['id'],
-                        "ratio" : Ratio,
-                        "item" : "Razón Social"
-                    }
-                    logging.warning(merge)
-                    result_name.append(merge)
-                    #print(merge)
-        except:
-          print("An exception occurred")
+df_dataprovider_no_na_name = df_dataprovider.dropna(subset=['Company name'])
+print(df_dataprovider_no_na_razon.count())
 
 
-        df_csv_direcotrio_copy = df_directorio_lower
-        try:
-            df_filter = df_csv_direcotrio_copy['NOMBRE_COMERCIAL'].str.match(name)
-            contains_string =  df_filter == True
-            df_csv__filtered = df_csv_direcotrio_copy[contains_string]
-            count = df_csv__filtered['NOMBRE_COMERCIAL'].count()
-            if(count > 0):
-                for index2, row2 in df_csv__filtered.iterrows():
-                    Ratio = lev.ratio(row['Company name'].lower(),row2['NOMBRE_COMERCIAL'].lower())
-                if Ratio > 0.70:
-                    merge = {
-                        "web_page_dataprovider" : row['Web Page'],
-                        "web_page_directorio" : row2['Web Page'],
-                        "value_comparation_dataprovider" : row['Company name'],
-                        "value_comparation_directorio" : row2['NOMBRE_COMERCIAL'],
-                        "index_dataprovider" : row['id'],
-                        "index_directorio" : row2['id'],
-                        "ratio" : Ratio,
-                        "item" : "Nombre Comercial"
-                    }
-                    logging.warning(merge)
-                    result_name.append(merge)
-        except:
-          print("An exception occurred")
+for i in df_dataprovider_no_na_name.index:
+    name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name')
+    id_dataprovider = df_dataprovider_no_na_name.get_value(i,'id')
+    web_page_dataprovider = df_dataprovider_no_na_name.get_value(i,'Web Page')
+    df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['RAZON_SOCIAL'].str.contains(name_dataprovider)]
+    count = df_csv_filtered['WEB'].count()
+    if(count > 0):
+        for j in df_csv_filtered.index:
+            name_directorio = df_csv_filtered.get_value(j,'RAZON_SOCIAL')
+            id_directorio = df_csv_filtered.get_value(j,'id')
+            web_page_directorio = df_csv_filtered.get_value(j,'Web Page')
+
+            Ratio = lev.ratio(name_dataprovider.lower(),name_directorio.lower())
+            if Ratio > 0.70:
+                merge = {
+                    "web_page_dataprovider" : web_page_dataprovider,
+                    "web_page_directorio" : web_page_directorio,
+                    "index_dataprovider" : id_dataprovider,
+                    "index_directorio" : id_directorio,
+                    "ratio" : Ratio,
+                    "item" : "Razón Social",
+                    "value_comparation_dataprovider" : name_dataprovider,
+                    "value_comparation_directorio" : name_directorio
+                }
+                logging.warning(merge)
+                result.append(merge)
+                df_directorio.drop([j])
+    df_dataprovider.drop([i])
+
+
 
 
 result_mail = []
@@ -239,7 +241,7 @@ for index, row in df_dataprovider.iterrows():
                     logging.warning(merge)
                     result_mail.append(merge)
 print(len(result_mail))
-
+'''
 
 #CREANDO LA CADENA DE CONNECTION
 connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")

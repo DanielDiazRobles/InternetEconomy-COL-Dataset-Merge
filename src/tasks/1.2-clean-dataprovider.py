@@ -9,6 +9,7 @@ import sys
 import configparser
 import time
 from psycopg2.extras import execute_values
+from helper import helper
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -171,7 +172,8 @@ logging.info("")
 #ELIMINANDO LOS CORREOS MAS REPETIDOS
 print("Eliminando correos mas repetidos")
 i = 0
-arrayFindValues = ['info@example.com' , 'mail@correo.com' , 'email@yourbusiness.com' , 'info@demolink.org' , 'mail@example.com' , 'info@yourdomain.com' , 'info@yoursite.com' , 'contact@example.com' , 'info@misitio.com' , 'contact@company.com' , 'email@example.com' , 'info@domain.com' , 'info@company.com' , 'support@rn.org' , 'mail@demolink.org' , 'sales@yourcompany.com' , 'info@site.info' , 'info@yourwebsite.com' , 'email@domain.com' , 'info@corferias.com' , 'info@email.com' , 'contact@yoursite.com' , 'info@your-domain.com' , 'email@ejemplo.com' , 'info@felin , x.com.co' , 'support@example.com' , 'contact@email.com', 'mail@mail.com', 'mail@ejemplo.com', 'info@gmail.com', 'info@yourcompany.com', 'info@mail.com', 'info@mysite.com', 'info@sitename.com', 'marketing@example.com', 'support@company.com', 'info@website.com', 'wordpress@example.com', 'su@email.com', 'ejemplo@correo.com', 'your@email.com', 'nombre@correo.com', 'su-email@ejemplo.com', 'someone@example.com', 'example@email.com', 'youremail@yourdomain.com', 'correo@dominio.com', 'info@tudominio.com', 'ejemplo@ejemplo.com', 'name@example.com', 'ejemplo@gmail.com', 'example@example.com']
+
+arrayFindValues = helper.array_find_values_mail
 for index, row in df_csv.iterrows():
     if row['Email address'] in arrayFindValues:
         df_csv.at[index, 'Email address'] = np.nan
@@ -192,7 +194,7 @@ logging.info("")
 #ELIMINANDO LOS CORREOS MAS REPETIDOS SECONDARY EMAIL
 print("Eliminando correos secundarios mas repetidos")
 i = 0
-arrayFindValues = ['info@example.com' , 'mail@correo.com' , 'email@yourbusiness.com' , 'info@demolink.org' , 'mail@example.com' , 'info@yourdomain.com' , 'info@yoursite.com' , 'contact@example.com' , 'info@misitio.com' , 'contact@company.com' , 'email@example.com' , 'info@domain.com' , 'info@company.com' , 'support@rn.org' , 'mail@demolink.org' , 'sales@yourcompany.com' , 'info@site.info' , 'info@yourwebsite.com' , 'email@domain.com' , 'info@corferias.com' , 'info@email.com' , 'contact@yoursite.com' , 'info@your-domain.com' , 'email@ejemplo.com' , 'info@felin , x.com.co' , 'support@example.com' , 'contact@email.com', 'mail@mail.com', 'mail@ejemplo.com', 'info@gmail.com', 'info@yourcompany.com', 'info@mail.com', 'info@mysite.com', 'info@sitename.com', 'marketing@example.com', 'support@company.com', 'info@website.com', 'wordpress@example.com', 'su@email.com', 'ejemplo@correo.com', 'your@email.com', 'nombre@correo.com', 'su-email@ejemplo.com', 'someone@example.com', 'example@email.com', 'youremail@yourdomain.com', 'correo@dominio.com', 'info@tudominio.com', 'ejemplo@ejemplo.com', 'name@example.com', 'ejemplo@gmail.com', 'example@example.com']
+arrayFindValues = helper.array_find_values_mail
 for index, row in df_csv.iterrows():
     if row['Secondary email addresses'] in arrayFindValues:
         df_csv.at[index, 'Secondary email addresses'] = np.nan
@@ -269,7 +271,7 @@ for name_of_the_group, group in group_host:
     count = 0;
     for index, row in group.iterrows():
         if count == 0:
-            record_to_insert = (index, row['Hostname'], row['Continent'], row['Country'], row['Region'], row['Zip code'], row['City'], row['Address'], row['Addresses'], row['Company name'], row['Company type'], row['Company quality'], row['Legal entity'], row['Business Registry number'], row['IBAN number'], row['BIC number'], row['Tax number'], row['Phone number'], row['Secondary phone numbers'], row['Email address'], row['Secondary email addresses'], row['Keywords'], row['Relevant keywords'], row['Subdomain'], row['Domain'], row['DNS NS domain'])
+            record_to_insert = (index, row['Web Page'], row['Continent'], row['Country'], row['Region'], row['Zip code'], row['City'], row['Address'], row['Addresses'], row['Company name'], row['Company type'], row['Company quality'], row['Legal entity'], row['Business Registry number'], row['IBAN number'], row['BIC number'], row['Tax number'], row['Phone number'], row['Secondary phone numbers'], row['Email address'], row['Secondary email addresses'], row['Keywords'], row['Relevant keywords'], row['Subdomain'], row['Domain'], row['DNS NS domain'])
             array_insert.append(record_to_insert)
             count = 1
         else:
