@@ -151,11 +151,11 @@ for i in df_dataprovider.index:
                         "value_comparation_dataprovider" : web_page_dataprovider,
                         "value_comparation_directorio" : web_page_directorio
                     }
+                    print(merge)
                     logging.warning(merge)
                     result.append(merge)
     except :
         print("error de indice")
-    print(i)
 
 
 df_directorio = df_directorio.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
