@@ -53,6 +53,7 @@ dataprovider = cursor.fetchall()
 df_dataprovider = pd.DataFrame(dataprovider, columns=['id', 'Hostname', 'Continent', 'Country', 'Region', 'Zip code', 'City', 'Address', 'Addresses', 'Company name', 'Company type', 'Company quality', 'Legal entity', 'Business Registry number', 'IBAN number', 'BIC number', 'Tax number', 'Phone number', 'Secondary phone numbers', 'Email address', 'Secondary email addresses', 'Keywords', 'Relevant keywords', 'Subdomain', 'Domain', 'DNS NS domain', 'main_web'])
 logging.warning(df_dataprovider.count())
 
+df_directorio = df_directorio.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
 
 #CREANDO COLUMNA DE URL LIMPIA DE DATAPROVIDER
 df_dataprovider['Web Page'] = df_dataprovider['Hostname']
@@ -112,6 +113,8 @@ df_directorio['WEB'] = df_directorio['WEB'].str.replace('.info','')
 df_directorio['WEB'] = df_directorio['WEB'].str.replace('.site','')
 df_directorio['WEB'] = df_directorio['WEB'].str.replace('.blog','')
 
+result = []
+
 
 #FILTRANDO POR SITIOS UNICAMENTE CON WEB
 for i in df_directorio.index:
@@ -122,7 +125,6 @@ for i in df_directorio.index:
 df_directorio_no_na_web = df_directorio.dropna(subset=['WEB'])
 print(df_directorio_no_na_web.count())
 
-result = []
 
 for i in df_dataprovider.index:
     try :
@@ -185,7 +187,7 @@ for i in df_dataprovider_no_na_name.index:
         name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name')
         id_dataprovider = df_dataprovider_no_na_name.get_value(i,'id')
         web_page_dataprovider = df_dataprovider_no_na_name.get_value(i,'Web Page')
-        df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['RAZON_SOCIAL'].str.contains(name_dataprovider)]
+        df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['RAZON_SOCIAL'].str.match(name_dataprovider)]
         count = df_csv_filtered['RAZON_SOCIAL'].count()
         if(count > 0):
             for j in df_csv_filtered.index:
@@ -239,15 +241,16 @@ for i in df_dataprovider_no_na_email.index:
         email_dataprovider = df_dataprovider_no_na_email.get_value(i,'Email address')
         id_dataprovider = df_dataprovider_no_na_email.get_value(i,'id')
         web_page_dataprovider = df_dataprovider_no_na_email.get_value(i,'Web Page')
-        df_csv_filtered = df_directorio_no_na_email[df_directorio_no_na_email['EMAIL'].str.contains(email_dataprovider)]
-        count = df_csv_filtered['RAZON_SOCIAL'].count()
+        df_csv_filtered = df_directorio_no_na_email[df_directorio_no_na_email['EMAIL'].str.match(email_dataprovider)]
+        count = df_csv_filtered['EMAIL'].count()
         if(count > 0):
+
             for j in df_csv_filtered.index:
                 email_directorio = df_csv_filtered.get_value(j,'EMAIL')
                 id_directorio = df_csv_filtered.get_value(j,'id')
                 web_page_directorio = df_csv_filtered.get_value(j,'Web Page')
 
-                Ratio = lev.ratio(name_dataprovider.lower(),name_directorio.lower())
+                Ratio = lev.ratio(email_dataprovider.lower(),email_directorio.lower())
                 if Ratio > 0.70:
                     merge = {
                         "web_page_dataprovider" : web_page_dataprovider,
@@ -263,7 +266,6 @@ for i in df_dataprovider_no_na_email.index:
                     result.append(merge)
     except :
         print("error de indice")
-    print(i)
 
 print(len(result))
 
@@ -274,15 +276,15 @@ cursor = connection.cursor()
 
 
 #Limpiando la tabla directorio_clean
-postgres_delete_query = """ DELETE FROM merge_relations"""
-cursor.execute(postgres_delete_query)
-connection.commit()
+#postgres_delete_query = """ DELETE FROM merge_relations"""
+#cursor.execute(postgres_delete_query)
+#connection.commit()
 
 
 #GUARDANDO INFORMACION EN BD TABLA CLEAN
 postgres_insert_query = """ INSERT INTO merge_relations (merge_id,dataprovider_id,directorio_id,web_page_dataprovider,web_page_directorio,value_comparation_dataprovider,value_comparation_directorio,ratio,item) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
-i = 0
+i = 100000
 for item in result:
     record_to_insert = (i, item['index_dataprovider'], item['index_directorio'], item['web_page_dataprovider'], item['web_page_directorio'], item['value_comparation_dataprovider'], item['value_comparation_directorio'],item['ratio'],item['item'])
     cursor.execute(postgres_insert_query, record_to_insert)
