@@ -12,7 +12,7 @@ config.read("config.ini")
 #Abriendo el archivo
 path = os.path.abspath('data/directorio/directorio.csv')
 df_csv = pd.read_csv(path)
-#df_csv = df_csv.sample(n=1000, random_state=1)
+df_csv = df_csv.sample(n=1000, random_state=1)
 
 
 #Generando la conexion a BD

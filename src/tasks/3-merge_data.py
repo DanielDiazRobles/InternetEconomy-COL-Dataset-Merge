@@ -14,6 +14,17 @@ config.read("config.ini")
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
+
+from psycopg2.extensions import register_adapter, AsIs
+def addapt_numpy_float64(numpy_float64):
+    return AsIs(numpy_float64)
+def addapt_numpy_int64(numpy_int64):
+    return AsIs(numpy_int64)
+register_adapter(np.float64, addapt_numpy_float64)
+register_adapter(np.int64, addapt_numpy_int64)
+
+
+
 logging.basicConfig(filename='logs/merge_data.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 #Consulta  a la BD tabla directorio_clean
@@ -27,7 +38,7 @@ logging.warning(df_directorio.count())
 
 #Consulta  a la BD tabla dataprovider_clean
 connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
-postgreSQL_select_Query = "SELECT * FROM dataprovider_clean"
+postgreSQL_select_Query = "SELECT * FROM dataprovider_clean "
 cursor = connection.cursor()
 cursor.execute(postgreSQL_select_Query)
 dataprovider = cursor.fetchall()
@@ -103,8 +114,8 @@ for i in df_directorio.index:
 df_directorio_no_na_web = df_directorio.dropna(subset=['WEB'])
 print(df_directorio_no_na_web.count())
 
-
 result = []
+
 for i in df_dataprovider.index:
     try :
         host_dataprovider = df_dataprovider.get_value(i,'Hostname')
@@ -192,6 +203,7 @@ for i in df_dataprovider_no_na_name.index:
         print("error de indice")
     print(i)
 
+print(result.__len__())
 
 
 #FILTRANDO POR REGISTROS EMAIL
@@ -214,7 +226,7 @@ print(df_dataprovider_no_na_email.count())
 
 
 #MERGE POR EMAIL
-for i in df_dataprovider_no_na_name.index:
+for i in df_dataprovider_no_na_email.index:
     try:
         email_dataprovider = df_dataprovider_no_na_email.get_value(i,'Email address')
         id_dataprovider = df_dataprovider_no_na_email.get_value(i,'id')
@@ -245,6 +257,7 @@ for i in df_dataprovider_no_na_name.index:
         print("error de indice")
     print(i)
 
+print(len(result))
 
 
 #CREANDO LA CADENA DE CONNECTION
@@ -253,13 +266,13 @@ cursor = connection.cursor()
 
 
 #Limpiando la tabla directorio_clean
-#postgres_delete_query = """ DELETE FROM merge_relations"""
-#cursor.execute(postgres_delete_query)
-#connection.commit()
+postgres_delete_query = """ DELETE FROM merge_relations"""
+cursor.execute(postgres_delete_query)
+connection.commit()
 
 
 #GUARDANDO INFORMACION EN BD TABLA CLEAN
-postgres_insert_query = """ INSERT INTO merge_relations (merge_id,dataprovider_id,directorio_id,web_page_dataprovider,web_page_directorio,value_comparation_dataprovider,value_comparation_directorio,ratio,item) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
+postgres_insert_query = """ INSERT INTO merge_relations (merge_id,dataprovider_id,directorio_id,web_page_dataprovider,web_page_directorio,value_comparation_dataprovider,value_comparation_directorio,ratio,item) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
 i = 0
 for item in result:
