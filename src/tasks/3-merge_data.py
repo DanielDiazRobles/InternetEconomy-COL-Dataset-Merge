@@ -207,13 +207,12 @@ for i in df_dataprovider_no_na_name.index:
                         "value_comparation_dataprovider" : name_dataprovider,
                         "value_comparation_directorio" : name_directorio
                     }
+                    print(merge)
                     logging.warning(merge)
                     result.append(merge)
     except :
         print("error de indice")
-    print(i)
 
-print(result.__len__())
 
 
 #FILTRANDO POR REGISTROS EMAIL
@@ -241,7 +240,7 @@ for i in df_dataprovider_no_na_email.index:
         email_dataprovider = df_dataprovider_no_na_email.get_value(i,'Email address')
         id_dataprovider = df_dataprovider_no_na_email.get_value(i,'id')
         web_page_dataprovider = df_dataprovider_no_na_email.get_value(i,'Web Page')
-        df_csv_filtered = df_directorio_no_na_email[df_directorio_no_na_email['EMAIL'].str.match(email_dataprovider)]
+        df_csv_filtered = df_directorio_no_na_email[df_directorio_no_na_email['EMAIL'].str.contains(email_dataprovider)]
         count = df_csv_filtered['EMAIL'].count()
         if(count > 0):
 
@@ -251,7 +250,7 @@ for i in df_dataprovider_no_na_email.index:
                 web_page_directorio = df_csv_filtered.get_value(j,'Web Page')
 
                 Ratio = lev.ratio(email_dataprovider.lower(),email_directorio.lower())
-                if Ratio > 0.70:
+                if Ratio > 0.90:
                     merge = {
                         "web_page_dataprovider" : web_page_dataprovider,
                         "web_page_directorio" : web_page_directorio,
@@ -262,12 +261,64 @@ for i in df_dataprovider_no_na_email.index:
                         "value_comparation_dataprovider" : email_dataprovider,
                         "value_comparation_directorio" : email_directorio
                     }
+                    print(merge)
                     logging.warning(merge)
                     result.append(merge)
     except :
         print("error de indice")
-
 print(len(result))
+
+
+
+
+
+#FILTRANDO POR REGISTROS EMAIL
+for i in df_dataprovider.index:
+    email_dataprovider = df_dataprovider.get_value(i,'Secondary email addresses')
+    if email_dataprovider == "":
+        df_dataprovider.set_value(i,'Secondary email addresses',np.nan)
+
+df_dataprovider_no_na_email = df_dataprovider.dropna(subset=['Secondary email addresses'])
+print(df_dataprovider_no_na_email.count())
+
+
+#MERGE POR EMAIL
+for i in df_dataprovider_no_na_email.index:
+    try:
+        email_dataprovider = df_dataprovider_no_na_email.get_value(i,'Secondary email addresses')
+        id_dataprovider = df_dataprovider_no_na_email.get_value(i,'id')
+        web_page_dataprovider = df_dataprovider_no_na_email.get_value(i,'Web Page')
+        df_csv_filtered = df_directorio_no_na_email[df_directorio_no_na_email['EMAIL'].str.contains(email_dataprovider)]
+        count = df_csv_filtered['EMAIL'].count()
+        if(count > 0):
+
+            for j in df_csv_filtered.index:
+                email_directorio = df_csv_filtered.get_value(j,'EMAIL')
+                id_directorio = df_csv_filtered.get_value(j,'id')
+                web_page_directorio = df_csv_filtered.get_value(j,'Web Page')
+
+                Ratio = lev.ratio(email_dataprovider.lower(),email_directorio.lower())
+                if Ratio > 0.90:
+                    merge = {
+                        "web_page_dataprovider" : web_page_dataprovider,
+                        "web_page_directorio" : web_page_directorio,
+                        "index_dataprovider" : id_dataprovider,
+                        "index_directorio" : id_directorio,
+                        "ratio" : Ratio,
+                        "item" : "Secondary Email",
+                        "value_comparation_dataprovider" : email_dataprovider,
+                        "value_comparation_directorio" : email_directorio
+                    }
+                    print(merge)
+                    logging.warning(merge)
+                    result.append(merge)
+    except :
+        print("error de indice")
+print(len(result))
+
+
+
+
 
 
 #CREANDO LA CADENA DE CONNECTION
@@ -276,15 +327,15 @@ cursor = connection.cursor()
 
 
 #Limpiando la tabla directorio_clean
-#postgres_delete_query = """ DELETE FROM merge_relations"""
-#cursor.execute(postgres_delete_query)
-#connection.commit()
+postgres_delete_query = """ DELETE FROM merge_relations"""
+cursor.execute(postgres_delete_query)
+connection.commit()
 
 
 #GUARDANDO INFORMACION EN BD TABLA CLEAN
 postgres_insert_query = """ INSERT INTO merge_relations (merge_id,dataprovider_id,directorio_id,web_page_dataprovider,web_page_directorio,value_comparation_dataprovider,value_comparation_directorio,ratio,item) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
-i = 100000
+i = 0
 for item in result:
     record_to_insert = (i, item['index_dataprovider'], item['index_directorio'], item['web_page_dataprovider'], item['web_page_directorio'], item['value_comparation_dataprovider'], item['value_comparation_directorio'],item['ratio'],item['item'])
     cursor.execute(postgres_insert_query, record_to_insert)
