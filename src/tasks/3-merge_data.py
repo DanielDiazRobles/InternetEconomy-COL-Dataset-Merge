@@ -147,7 +147,7 @@ for i in df_dataprovider.index:
                         "index_dataprovider" : id_dataprovider,
                         "index_directorio" : id_directorio,
                         "ratio" : Ratio,
-                        "item" : "hostname",
+                        "item" : "Hostname",
                         "value_comparation_dataprovider" : web_page_dataprovider,
                         "value_comparation_directorio" : web_page_directorio
                     }
