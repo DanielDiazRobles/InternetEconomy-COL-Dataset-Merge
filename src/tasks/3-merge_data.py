@@ -187,6 +187,41 @@ for i in df_dataprovider_no_na_name.index:
         name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name')
         id_dataprovider = df_dataprovider_no_na_name.get_value(i,'id')
         web_page_dataprovider = df_dataprovider_no_na_name.get_value(i,'Web Page')
+        df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['NOMBRE_COMERCIAL'].str.match(name_dataprovider)]
+        count = df_csv_filtered['NOMBRE_COMERCIAL'].count()
+        if(count > 0):
+            for j in df_csv_filtered.index:
+                name_directorio = df_csv_filtered.get_value(j,'NOMBRE_COMERCIAL')
+                id_directorio = df_csv_filtered.get_value(j,'id')
+                web_page_directorio = df_csv_filtered.get_value(j,'Web Page')
+
+                Ratio = lev.ratio(name_dataprovider.lower(),name_directorio.lower())
+                if Ratio > 0.70:
+                    merge = {
+                        "web_page_dataprovider" : web_page_dataprovider,
+                        "web_page_directorio" : web_page_directorio,
+                        "index_dataprovider" : id_dataprovider,
+                        "index_directorio" : id_directorio,
+                        "ratio" : Ratio,
+                        "item" : "Nombre Comercial",
+                        "value_comparation_dataprovider" : name_dataprovider,
+                        "value_comparation_directorio" : name_directorio
+                    }
+                    print(merge)
+                    logging.warning(merge)
+                    result.append(merge)
+    except :
+        print("error de indice")
+
+
+
+
+#MERGE POR RAZON SOCIAL
+for i in df_dataprovider_no_na_name.index:
+    try :
+        name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name')
+        id_dataprovider = df_dataprovider_no_na_name.get_value(i,'id')
+        web_page_dataprovider = df_dataprovider_no_na_name.get_value(i,'Web Page')
         df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['RAZON_SOCIAL'].str.match(name_dataprovider)]
         count = df_csv_filtered['RAZON_SOCIAL'].count()
         if(count > 0):
@@ -212,6 +247,10 @@ for i in df_dataprovider_no_na_name.index:
                     result.append(merge)
     except :
         print("error de indice")
+
+
+
+
 
 
 
