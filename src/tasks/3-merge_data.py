@@ -54,6 +54,7 @@ df_dataprovider = pd.DataFrame(dataprovider, columns=['id', 'Hostname', 'Contine
 logging.warning(df_dataprovider.count())
 
 df_directorio = df_directorio.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
+df_dataprovider = df_dataprovider.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
 
 #CREANDO COLUMNA DE URL LIMPIA DE DATAPROVIDER
 df_dataprovider['Web Page'] = df_dataprovider['Hostname']
