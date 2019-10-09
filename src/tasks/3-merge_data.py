@@ -46,7 +46,7 @@ logging.warning(df_directorio.count())
 
 #Consulta  a la BD tabla dataprovider_clean
 connection = psycopg2.connect("dbname='cd_digital_economy' user='" + config['DataBase']['user'] + "' host='localhost' password='" + config['DataBase']['password'] +"'")
-postgreSQL_select_Query = "SELECT * FROM dataprovider_clean "
+postgreSQL_select_Query = "SELECT * FROM dataprovider_clean"
 cursor = connection.cursor()
 cursor.execute(postgreSQL_select_Query)
 dataprovider = cursor.fetchall()
@@ -181,7 +181,7 @@ print(df_dataprovider_no_na_name.count())
 
 
 
-#MERGE POR RAZON SOCIAL
+#MERGE POR NOMBRE COMERCIAL
 for i in df_dataprovider_no_na_name.index:
     try :
         name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name').lower()
