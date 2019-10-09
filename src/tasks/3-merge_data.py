@@ -184,10 +184,10 @@ print(df_dataprovider_no_na_name.count())
 #MERGE POR RAZON SOCIAL
 for i in df_dataprovider_no_na_name.index:
     try :
-        name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name')
+        name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name').lower()
         id_dataprovider = df_dataprovider_no_na_name.get_value(i,'id')
         web_page_dataprovider = df_dataprovider_no_na_name.get_value(i,'Web Page')
-        df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['NOMBRE_COMERCIAL'].str.match(name_dataprovider)]
+        df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['NOMBRE_COMERCIAL'].str.contains(name_dataprovider)]
         count = df_csv_filtered['NOMBRE_COMERCIAL'].count()
         if(count > 0):
             for j in df_csv_filtered.index:
@@ -207,7 +207,7 @@ for i in df_dataprovider_no_na_name.index:
                         "value_comparation_dataprovider" : name_dataprovider,
                         "value_comparation_directorio" : name_directorio
                     }
-                    print(merge)
+                    print(i)
                     logging.warning(merge)
                     result.append(merge)
     except :
@@ -215,14 +215,13 @@ for i in df_dataprovider_no_na_name.index:
 
 
 
-
 #MERGE POR RAZON SOCIAL
 for i in df_dataprovider_no_na_name.index:
     try :
-        name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name')
+        name_dataprovider = df_dataprovider_no_na_name.get_value(i,'Company name').lower()
         id_dataprovider = df_dataprovider_no_na_name.get_value(i,'id')
         web_page_dataprovider = df_dataprovider_no_na_name.get_value(i,'Web Page')
-        df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['RAZON_SOCIAL'].str.match(name_dataprovider)]
+        df_csv_filtered = df_directorio_no_na_razon[df_directorio_no_na_razon['RAZON_SOCIAL'].str.contains(name_dataprovider)]
         count = df_csv_filtered['RAZON_SOCIAL'].count()
         if(count > 0):
             for j in df_csv_filtered.index:
@@ -254,6 +253,7 @@ for i in df_dataprovider_no_na_name.index:
 
 
 
+
 #FILTRANDO POR REGISTROS EMAIL
 for i in df_directorio.index:
     email_direcotrio = df_directorio.get_value(i,'EMAIL')
@@ -262,7 +262,6 @@ for i in df_directorio.index:
 
 df_directorio_no_na_email = df_directorio.dropna(subset=['EMAIL'])
 print(df_directorio_no_na_email.count())
-
 
 for i in df_dataprovider.index:
     email_dataprovider = df_dataprovider.get_value(i,'Email address')
@@ -348,15 +347,12 @@ for i in df_dataprovider_no_na_email.index:
                         "value_comparation_dataprovider" : email_dataprovider,
                         "value_comparation_directorio" : email_directorio
                     }
-                    print(merge)
+                    print(i)
                     logging.warning(merge)
                     result.append(merge)
     except :
         print("error de indice")
 print(len(result))
-
-
-
 
 
 
